@@ -1,26 +1,34 @@
 function setup() {
+    // canvas = createCanvas(window.innerWidth, window.innerHeight);
+    // canvas.canvas.style.display = "block";
+    // pg = createGraphics(window.innerWidth, window.innerHeight);
+    // background(0);
+    // capture = createCapture(VIDEO);
+    // capture.size(window.innerWidth, window.innerHeight);
+    // // capture.hide();
+
     canvas = createCanvas(window.innerWidth, window.innerHeight);
     canvas.canvas.style.display = "block";
     pg = createGraphics(width, height);
     background(0);
+ 
     capture = createCapture(VIDEO);
     capture.size(width, height);
-    capture.hide();
+    // capture.hide();
 
 }
 
 function draw() {
-    background(0);
+    // background(255);
     pg.image(capture, 0, 0);
 
     let src = cv.imread(pg.canvas);
-    canvas.width = src.size().width;
-    canvas.height = src.size().height;
+    
     let dst = cv.Mat.zeros(src.cols, src.rows, cv.CV_8UC3);
 
 
     cv.cvtColor(src, src, cv.COLOR_RGB2GRAY, 0);
-    // cv.threshold(src, src, 120, 200, cv.THRESH_BINARY);
+    cv.threshold(src, src, 100, 100, cv.THRESH_BINARY);
     let contours = new cv.MatVector();
     let hierarchy = new cv.Mat();
     // You can try more different parameters
