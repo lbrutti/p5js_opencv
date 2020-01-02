@@ -1,8 +1,21 @@
-function onOpenCVReady() {
-    let src = cv.imread("canvasInput");
-    const canvasOutput = document.querySelector("#canvasOutput");
-    canvasOutput.width = src.size().width;
-    canvasOutput.height = src.size().height;
+function setup() {
+    canvas = createCanvas(window.innerWidth, window.innerHeight);
+    canvas.canvas.style.display = "block";
+    pg = createGraphics(width, height);
+    background(0);
+    capture = createCapture(VIDEO);
+    capture.size(width, height);
+    capture.hide();
+
+}
+
+function draw() {
+    background(0);
+    pg.image(capture, 0, 0);
+
+    let src = cv.imread(pg.canvas);
+    canvas.width = src.size().width;
+    canvas.height = src.size().height;
     let dst = cv.Mat.zeros(src.cols, src.rows, cv.CV_8UC3);
 
 
@@ -43,11 +56,11 @@ function onOpenCVReady() {
         }
     }
 
-    cv.imshow("canvasOutput", dst);
+    cv.imshow(canvas.canvas, dst);
     src.delete();
     dst.delete();
 
     contours.delete();
     hierarchy.delete();
-
+    // console.log('draw');
 }
