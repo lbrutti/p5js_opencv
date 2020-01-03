@@ -1,12 +1,4 @@
 function setup() {
-    // canvas = createCanvas(window.innerWidth, window.innerHeight);
-    // canvas.canvas.style.display = "block";
-    // pg = createGraphics(window.innerWidth, window.innerHeight);
-    // background(0);
-    // capture = createCapture(VIDEO);
-    // capture.size(window.innerWidth, window.innerHeight);
-    // // capture.hide();
-
     canvas = createCanvas(window.innerWidth, window.innerHeight);
     canvas.canvas.style.display = "block";
     pg = createGraphics(width, height);
@@ -14,12 +6,12 @@ function setup() {
  
     capture = createCapture(VIDEO);
     capture.size(width, height);
-    // capture.hide();
+    capture.hide();
 
 }
 
 function draw() {
-    // background(255);
+    background(0);
     pg.image(capture, 0, 0);
 
     let src = cv.imread(pg.canvas);
@@ -28,7 +20,7 @@ function draw() {
 
 
     cv.cvtColor(src, src, cv.COLOR_RGB2GRAY, 0);
-    cv.threshold(src, src, 100, 100, cv.THRESH_BINARY);
+    cv.threshold(src, src, 120, 200, cv.THRESH_BINARY);
     let contours = new cv.MatVector();
     let hierarchy = new cv.Mat();
     // You can try more different parameters
@@ -37,19 +29,20 @@ function draw() {
         contours,
         hierarchy,
         cv.RETR_CCOMP,
-        cv.CHAIN_APPROX_SIMPLE
+        cv.CHAIN_APPROX_NONE
     );
     // draw contours with random Scalar
     const points = {};
     for (let i = 0; i < contours.size(); ++i) {
         const ci = contours.get(i);
         let area = cv.contourArea(ci, false);
-        if (area > 20) {
-            let color = new cv.Scalar(
-                Math.round(Math.random() * 255),
-                Math.round(Math.random() * 255),
-                Math.round(Math.random() * 255)
-            );
+        let color = new cv.Scalar(
+            255,
+            255,
+            255
+        );
+        if (area > 200) {
+            console.log(area);
 
             cv.drawContours(dst, contours, i, color, 1, cv.LINE_8, hierarchy, 100);
 
@@ -70,5 +63,4 @@ function draw() {
 
     contours.delete();
     hierarchy.delete();
-    // console.log('draw');
 }
