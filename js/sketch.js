@@ -7,7 +7,7 @@ function setup() {
 
     capture = createCapture(VIDEO);
     capture.size(width, height);
-    capture.hide();
+    // capture.hide();
 
     button = createButton('submit');
     button.position(65, height);
@@ -61,13 +61,13 @@ function draw() {
         if (area > AREA_THRESHOLD) {
             cv.drawContours(dst, contours, i, color, 1, cv.LINE_8, hierarchy, 100);
 
-            points[i] = [];
-            for (let j = 0; j < ci.data32S.length; j += 2) {
-                let p = {};
-                p.x = ci.data32S[j];
-                p.y = ci.data32S[j + 1];
-                points[i].push(p);
-            }
+            // points[i] = [];
+            // for (let j = 0; j < ci.data32S.length; j += 2) {
+            //     let p = {};
+            //     p.x = ci.data32S[j];
+            //     p.y = ci.data32S[j + 1];
+            //     points[i].push(p);
+            // }
 
         }
     }
