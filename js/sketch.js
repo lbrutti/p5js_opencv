@@ -1,26 +1,31 @@
 const AREA_THRESHOLD = 500;
 function setup() {
-    canvas = createCanvas(window.innerWidth, window.innerHeight);
-    canvas.canvas.style.display = "block";
+    width = 1280;
+    height = 720
+    canvas = createCanvas(width, height);
+    canvas.id('creata');
+    capture = createCapture({
+        video: {
+            mandatory: {
+                minWidth: width,
+                minHeight: height
+            },
+            optional: [{ maxFrameRate: 25 }]
+        },
+        audio: false
+    });
+    capture.size(width, height);
+    capture.hide();
     pg = createGraphics(width, height);
     background(0);
-
-    capture = createCapture(VIDEO);
-    capture.size(width, height);
-    // capture.hide();
-
-    button = createButton('submit');
-    button.position(65, height);
-    //   button.mousePressed(takeSnapshot);
 
 }
 
 function draw() {
     background(0);
-    pg.image(capture, 0, 0);
+    pg.image(capture, 0, 0, width, height);
     let src = cv.imread(pg.canvas);
-    // let original = cv.imread(pg.canvas);
-    let dst = cv.Mat.zeros(src.cols, src.rows, cv.CV_8UC3);
+    let dst = cv.Mat.zeros(src.size().height, src.size().width, cv.CV_8UC3);
 
     cv.cvtColor(src, src, cv.COLOR_RGB2GRAY, 0);
     cv.threshold(src, src, 120, 200, cv.THRESH_BINARY);
@@ -31,52 +36,44 @@ function draw() {
         src,
         contours,
         hierarchy,
-        cv.RETR_CCOMP,
-        cv.CHAIN_APPROX_SIMPLE
+        cv.RETR_EXTERNAL,
+        cv.CHAIN_APPROX_NONE
     );
     // draw contours with random Scalar
     const points = {};
     for (let i = 0; i < contours.size(); ++i) {
         const ci = contours.get(i);
-        // 2. Point Polygon Test
-        // This function finds the shortest distance between a point in the image and a contour. It returns the distance which is negative when point is outside the contour, positive when point is inside and zero if point is on the contour.
-        // We use the function: cv.pointPolygonTest (contour, pt, measureDist)
-
-        // Parameters
-        //     contour	input contour.
-        //     pt	point tested against the contour.
-        //     measureDist	if true, the function estimates the signed distance from the point to the nearest contour edge. Otherwise, the function only checks if the point is inside a contour or not.
-
         let area = cv.contourArea(ci, false);
-        if (area > AREA_THRESHOLD) {
-
-            let dist = cv.pointPolygonTest(ci, new cv.Point(mouseX, mouseY), true);
-            if (dist > 0) { console.log(dist); }
-        }
         let color = new cv.Scalar(
             255,
             255,
             255
         );
         if (area > AREA_THRESHOLD) {
-            cv.drawContours(dst, contours, i, color, 1, cv.LINE_8, hierarchy, 100);
 
-            // points[i] = [];
-            // for (let j = 0; j < ci.data32S.length; j += 2) {
-            //     let p = {};
-            //     p.x = ci.data32S[j];
-            //     p.y = ci.data32S[j + 1];
-            //     points[i].push(p);
-            // }
+            let dist = cv.pointPolygonTest(ci, new cv.Point(mouseX, mouseY), true);
+            if (dist > 0) { console.log(dist); }
+            points[i] = [];
+            for (let j = 0; j < ci.data32S.length; j += 2) {
+                let p = {};
+                p.x = ci.data32S[j];
+                p.y = ci.data32S[j + 1];
+                points[i].push(p);
+            }
 
         }
+        cv.drawContours(dst, contours, i, color, 1, cv.LINE_4, hierarchy,1, new cv.Point(0, 0));
+
     }
 
+    // cv.namedWindow("creata", cv.WINDOW_NORMAL);
+    cv.imshow('creata', dst);
     cv.imshow(canvas.canvas, dst);
-    // plotPoints(canvas.canvas, points);
+    plotPoints(canvas.canvas, points);
+    image(pg,0,0,width, height);
+   
     src.delete();
     dst.delete();
-    // original.delete();
     contours.delete();
     hierarchy.delete();
 }
