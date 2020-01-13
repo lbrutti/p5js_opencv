@@ -25,7 +25,6 @@ function draw() {
     background(0);
     pg.image(capture, 0, 0, width, height);
     let src = cv.imread(pg.canvas);
-    let dst = cv.Mat.zeros(src.size().height, src.size().width, cv.CV_8UC3);
 
     cv.cvtColor(src, src, cv.COLOR_RGB2GRAY, 0);
     cv.threshold(src, src, 120, 200, cv.THRESH_BINARY);
@@ -40,15 +39,10 @@ function draw() {
         cv.CHAIN_APPROX_NONE
     );
     // draw contours with random Scalar
-    const points = {};
+const points = {};
     for (let i = 0; i < contours.size(); ++i) {
         const ci = contours.get(i);
         let area = cv.contourArea(ci, false);
-        let color = new cv.Scalar(
-            255,
-            255,
-            255
-        );
         if (area > AREA_THRESHOLD) {
 
             let dist = cv.pointPolygonTest(ci, new cv.Point(mouseX, mouseY), true);
@@ -62,38 +56,21 @@ function draw() {
             }
 
         }
-        cv.drawContours(dst, contours, i, color, 1, cv.LINE_4, hierarchy,1, new cv.Point(0, 0));
 
     }
 
-    // cv.namedWindow("creata", cv.WINDOW_NORMAL);
-    cv.imshow('creata', dst);
-    cv.imshow(canvas.canvas, dst);
-    plotPoints(canvas.canvas, points);
-    image(pg,0,0,width, height);
-   
+    stroke(255, 204, 255);
+    strokeWeight(5);
+    Object.values(points).forEach(ps => {
+        beginShape();
+        fill(255,127,0);
+        ps.slice(1).forEach(({ x, y }) => {
+            vertex(x, y);
+        });
+        endShape(CLOSE);
+    });
+    line(mouseX, 0, mouseX, height);
     src.delete();
-    dst.delete();
     contours.delete();
     hierarchy.delete();
-}
-
-function plotPoints(canvas, points) {
-    const ctx = canvas.getContext('2d');
-    ctx.strokeStyle = 'green';
-
-    Object.values(points).forEach(ps => {
-        ctx.beginPath();
-        ctx.moveTo(ps[0].x, ps[1].y);
-        ctx.arc(ps[0].x, ps[1].y, 2, 0, 2 * Math.PI)
-        ps.slice(1).forEach(({ x, y }) => {
-            ctx.lineTo(x, y)
-            ctx.arc(x, y, 2, 0, 2 * Math.PI)
-        });
-        ctx.fillStyle = '#ee7700';
-        ctx.fill();
-    });
-    ctx.closePath();
-    ctx.stroke();
-    ctx.clip();
 }
