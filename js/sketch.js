@@ -73,6 +73,7 @@ function draw() {
     Object.values(points).forEach(ps => {
         let path = new paper.Path();
         path.strokeColor = 'red';
+        path.fill="gray";
         ps.slice(1).forEach(({ x, y }, i) => {
             if(!(i%30)){path.add(new paper.Point(x, y));}
         });
