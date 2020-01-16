@@ -20,7 +20,7 @@ function setup() {
     background(0);
     paper.setup(document.getElementById('creata'));
     shapes = [];
-
+    line;
 }
 
 function draw() {
@@ -74,9 +74,11 @@ function draw() {
         ps.slice(1).forEach(({ x, y }, i) => {
             if(!(i%30)){path.add(new paper.Point(x, y));}
         });
+        path.simplify();
+        path.smooth();
         shapes.push(path);
     });
-    let line = new paper.Path(new paper.Point(mouseX,0));
+    line = new paper.Path(new paper.Point(mouseX,0));
     line.add(mouseX,height);
     line.strokeColor = 'black';
     line.removeOnMove();
@@ -98,4 +100,5 @@ function showIntersections(path1, path2) {
     //         fillColor: '#009dec'
     //     }).removeOnMove();
     // }
+    return intersections;
 }
