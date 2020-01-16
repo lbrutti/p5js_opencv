@@ -74,6 +74,7 @@ function draw() {
         ps.slice(1).forEach(({ x, y }, i) => {
             if(!(i%30)){path.add(new paper.Point(x, y));}
         });
+        path.closePath();
         path.simplify();
         path.smooth();
         shapes.push(path);
