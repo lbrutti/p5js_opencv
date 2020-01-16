@@ -64,26 +64,26 @@ function draw() {
     //     endShape(CLOSE);
     // });
     // line(mouseX, 0, mouseX, height);
-    let line = new paper.Path(new paper.Point(mouseX,0));
-    line.add(mouseX,height);
-    line.strokeColor = 'black';
+    
 
         shapes.map(p=>p.remove());
-        line.removeOnMove();
     Object.values(points).forEach(ps => {
         let path = new paper.Path();
         path.strokeColor = 'red';
-        path.fill="gray";
+        path.fillColor= '#cccccc';
         ps.slice(1).forEach(({ x, y }, i) => {
             if(!(i%30)){path.add(new paper.Point(x, y));}
         });
         shapes.push(path);
     });
-    paper.view.draw();
-    
+    let line = new paper.Path(new paper.Point(mouseX,0));
+    line.add(mouseX,height);
+    line.strokeColor = 'black';
+    line.removeOnMove();
     shapes.map(p=>{
         showIntersections(line, p);
     })
+    paper.view.draw();
     src.delete();
     contours.delete();
     hierarchy.delete();
