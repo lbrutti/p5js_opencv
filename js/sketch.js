@@ -1,7 +1,7 @@
-const AREA_THRESHOLD = 1500;
+const AREA_THRESHOLD = 800;
 function setup() {
-    width = 960;
-    height = 720
+    width = 640;
+    height = 480;
     canvas = createCanvas(width, height);
     canvas.id('creata');
     capture = createCapture({
@@ -21,73 +21,91 @@ function setup() {
     paper.setup(document.getElementById('creata'));
     shapes = [];
     line;
+    button = createButton('snap');
+    button.position(19, 19);
+    button.mousePressed(snap);
+    reversed = false;
 }
 
-function draw() {
+function snap() {
     background(0);
+
     pg.image(capture, 0, 0, width, height);
+    if (!reversed) {
+
+        translate(width, 0); // move to far corner
+        scale(-1.0, 1.0);    // flip x-axis backwards
+        reversed = true;
+    }
     let src = cv.imread(pg.canvas);
+    let original = cv.imread(pg.canvas);
     cv.cvtColor(src, src, cv.COLOR_RGB2GRAY, 0);
-    cv.threshold(src, src, 120, 200, cv.THRESH_BINARY);
+    cv.threshold(src, src, 100, 200, cv.THRESH_BINARY);
     let contours = new cv.MatVector();
     let hierarchy = new cv.Mat();
     // You can try more different parameters
-    cv.findContours(src, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE);
+    cv.findContours(src, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_NONE);
     // draw contours with random Scalar
     const points = {};
     for (let i = 0; i < contours.size(); ++i) {
         const ci = contours.get(i);
         let area = cv.contourArea(ci, false);
-        if (area > AREA_THRESHOLD) {
-            let dist = cv.pointPolygonTest(ci, new cv.Point(mouseX, mouseY), true);
-            if (dist > 0) { console.log(dist); }
+        let M = cv.moments(ci, false);
+        let cx = M.m10 / M.m00;
+        let cy = M.m01 / M.m00;
+        if (true || (area > AREA_THRESHOLD)) {
+            // let dist = cv.pointPolygonTest(ci, new cv.Point(mouseX, mouseY), true);
+            // if (dist > 0) { console.log(dist); }
             points[i] = [];
             for (let j = 0; j < ci.data32S.length; j += 2) {
                 let p = {};
                 p.x = ci.data32S[j];
                 p.y = ci.data32S[j + 1];
                 points[i].push(p);
+                points[i].color = original.col(cx).row(cy).data;
             }
-
         }
 
     }
 
-    // stroke(255, 255, 255);
-    // strokeWeight(1);
-    // Object.values(points).forEach(ps => {
-    //     push(beginShape());
-    //     fill(250,250,250);
-    //     ps.slice(1).forEach(({ x, y }, i) => {
-    //         if(!(i%10)){vertex(x, y);}
-    //     });
-    //     endShape(CLOSE);
-    // });
-    // line(mouseX, 0, mouseX, height);
-    
-
-        shapes.map(p=>p.remove());
+    stroke(255, 255, 255);
+    strokeWeight(5);
     Object.values(points).forEach(ps => {
-        let path = new paper.Path();
-        path.strokeColor = 'red';
-        path.fillColor= '#cccccc';
+        beginShape();
         ps.slice(1).forEach(({ x, y }, i) => {
-            if(!(i%30)){path.add(new paper.Point(x, y));}
+            // if (!(i % 10)) {
+                vertex(x, y);
+            // }
         });
-        path.closePath();
-        path.simplify();
-        path.smooth();
-        shapes.push(path);
+        fill(ps.color[0], ps.color[1], ps.color[2]);
+        endShape(CLOSE);
     });
-    line = new paper.Path(new paper.Point(mouseX,0));
-    line.add(mouseX,height);
-    line.strokeColor = 'black';
-    line.removeOnMove();
-    shapes.map(p=>{
-        showIntersections(line, p);
-    })
-    paper.view.draw();
+
+    line(width - mouseX, 0, width - mouseX, height);
+
+
+    // shapes.map(p => p.remove());
+    // Object.values(points).forEach(ps => {
+    //     let path = new paper.Path();
+    //     path.strokeColor = 'red';
+    //     path.fillColor = '#cccccc';
+    //     ps.slice(1).forEach(({ x, y }, i) => {
+    //         if (!(i % 30)) { path.add(new paper.Point(x, y)); }
+    //     });
+    //     path.closePath();
+    //     path.simplify();
+    //     shapes.push(path);
+    // });
+    // line = new paper.Path(new paper.Point(mouseX, 0));
+    // line.add(mouseX, height);
+    // line.strokeColor = 'black';
+    // line.removeOnMove();
+    // shapes.map(p => {
+    //     showIntersections(line, p);
+    // })
+    // paper.view.draw();
     src.delete();
+    original.delete();
     contours.delete();
     hierarchy.delete();
 }
