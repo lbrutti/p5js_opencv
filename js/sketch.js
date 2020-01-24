@@ -67,9 +67,9 @@ function printContours() {
     }
 }
 
-// function draw(){
-//     snap();
-// }
+function draw(){
+    snap();
+}
 function snap() {
     background(0);
 
@@ -112,7 +112,7 @@ function snap() {
             let color = new cv.Scalar(Math.round(Math.random() * 255), Math.round(Math.random() * 255),
                 Math.round(Math.random() * 255));
             // color = original.col(cx).row(cy).data;
-            cv.drawContours(dst, contours, i, color, -1, cv.LINE_8, hierarchy, 100);
+            cv.drawContours(dst, contours, i, color, 1, cv.LINE_8, hierarchy, 100);
         }
     }
     cv.imshow('creata', dst);
