@@ -1,7 +1,8 @@
 const AREA_THRESHOLD = 800;
 function setup() {
-    width = 640;
-    height = 480;
+    //4160 × 3120
+    width = 4160;
+    height = 3120;
     canvas = createCanvas(width, height);
     canvas.id('creata');
     capture = createCapture({
@@ -24,7 +25,37 @@ function setup() {
     button = createButton('snap');
     button.position(19, 19);
     button.mousePressed(snap);
+
+    eraseButton = createButton('eraseBtn');
+    eraseButton.position(60, 19);
+    eraseButton.mousePressed(erasePressed);
+
+    printButton = createButton('printContours');
+    printButton.position(120, 19);
+    printButton.mousePressed(printContours);
     reversed = false;
+
+    // src = cv.imread('ritaglio');
+    // original = cv.imread('ritaglio');
+    contours = new cv.MatVector();
+
+}
+
+function erasePressed() {
+    src.delete();
+    original.delete();
+    contours.delete();
+}
+
+function printContours() {
+    for (let i = 0; i < contours.size(); ++i) {
+        const ci = contours.get(i);
+        let area = cv.contourArea(ci, false);
+        if (area > AREA_THRESHOLD) {
+
+            console.dir(ci);
+        }
+    }
 }
 
 function snap() {
@@ -37,14 +68,16 @@ function snap() {
         scale(-1.0, 1.0);    // flip x-axis backwards
         reversed = true;
     }
-    let src = cv.imread(pg.canvas);
-    let original = cv.imread(pg.canvas);
+    src = cv.imread('ritaglio');
+    //let src = cv.imread(pg.canvas); //decommentare per ripristinare capture da video
+    original = cv.imread('ritaglio');
+    //let original = cv.imread(pg.canvas); //decommentare per ripristinare capture da video
     cv.cvtColor(src, src, cv.COLOR_RGB2GRAY, 0);
     cv.threshold(src, src, 100, 200, cv.THRESH_BINARY);
-    let contours = new cv.MatVector();
+
     let hierarchy = new cv.Mat();
     // You can try more different parameters
-    cv.findContours(src, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_NONE);
+    cv.findContours(src, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
     // draw contours with random Scalar
     const points = {};
     for (let i = 0; i < contours.size(); ++i) {
@@ -53,7 +86,7 @@ function snap() {
         let M = cv.moments(ci, false);
         let cx = M.m10 / M.m00;
         let cy = M.m01 / M.m00;
-        if (true || (area > AREA_THRESHOLD)) {
+        if ((area > AREA_THRESHOLD)) {
             // let dist = cv.pointPolygonTest(ci, new cv.Point(mouseX, mouseY), true);
             // if (dist > 0) { console.log(dist); }
             points[i] = [];
@@ -74,7 +107,7 @@ function snap() {
         beginShape();
         ps.slice(1).forEach(({ x, y }, i) => {
             // if (!(i % 10)) {
-                vertex(x, y);
+            vertex(x, y);
             // }
         });
         fill(ps.color[0], ps.color[1], ps.color[2]);
@@ -104,9 +137,9 @@ function snap() {
     //     showIntersections(line, p);
     // })
     // paper.view.draw();
-    src.delete();
-    original.delete();
-    contours.delete();
+    // src.delete();
+    // original.delete();
+    // contours.delete();
     hierarchy.delete();
 }
 
