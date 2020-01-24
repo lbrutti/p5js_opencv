@@ -1,4 +1,4 @@
-const AREA_THRESHOLD = 800;
+const AREA_THRESHOLD = 1800;
 function setup() {
     //4160 × 3120
     width = 4160;
@@ -81,6 +81,9 @@ function snap() {
     for (let i = 0; i < contours.size(); ++i) {
         let ci = contours.get(i);
         let area = cv.contourArea(ci, false);
+        let M = cv.moments(ci, false);
+        let cx = M.m10 / M.m00
+        let cy = M.m01 / M.m00
         if (area > AREA_THRESHOLD) {
             let color = new cv.Scalar(Math.round(Math.random() * 255), Math.round(Math.random() * 255),
                 Math.round(Math.random() * 255));
