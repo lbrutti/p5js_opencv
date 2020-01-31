@@ -1,8 +1,8 @@
 const AREA_THRESHOLD = 1800;
 function setup() {
     //4160 × 3120
-    width = 640;
-    height = 480;
+    width = 4160;
+    height = 3120;
     canvas = createCanvas(width, height);
     canvas.id('creata');
     // capture = createCapture({
@@ -25,6 +25,10 @@ function setup() {
     button = createButton('snap');
     button.position(19, 19);
     button.mousePressed(snap);
+
+    testButton = createButton('loadFromImage');
+    testButton.position(200, 19);
+    testButton.mousePressed(loadFromImage);
 
     eraseButton = createButton('eraseBtn');
     eraseButton.position(60, 19);
@@ -67,6 +71,39 @@ function printContours() {
     }
 }
 
+function loadFromImage() {
+
+    background(0);
+    contoursArray = [];
+
+    src = cv.imread('ritaglio');
+    original = cv.imread('ritaglio');
+
+    cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+    cv.threshold(src, src, 120, 200, cv.THRESH_BINARY);
+    dst = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC4);
+
+    let contours = new cv.MatVector();
+    let hierarchy = new cv.Mat();
+    // You can try more different parameters
+    cv.findContours(src, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
+    for (let i = 0; i < contours.size(); ++i) {
+        let ci = contours.get(i);
+        let area = cv.contourArea(ci, false);
+        if (area > AREA_THRESHOLD) {
+            contoursArray.push(ci);
+            let M = cv.moments(ci, false);
+            let cx = M.m10 / M.m00
+            let cy = M.m01 / M.m00
+
+            let color = original.col(cx).row(cy).data;
+            contoursArray.push(cv.drawContours(dst, contours, i, color, 1, cv.LINE_8, hierarchy, 100));
+        }
+    }
+    cv.imshow('creata', dst);
+    hierarchy.delete();
+
+}
 // function draw(){
 //     snap();
 // }
@@ -111,7 +148,7 @@ function snap() {
             let cx = M.m10 / M.m00
             let cy = M.m01 / M.m00
 
-            let color = new cv.Scalar(255, 127,0);
+            let color = new cv.Scalar(255, 127, 0);
             // color = original.col(cx).row(cy).data;
             contoursArray.push(cv.drawContours(dst, contours, i, color, -1, cv.LINE_8, hierarchy, 100));
         }
