@@ -1,8 +1,8 @@
 const AREA_THRESHOLD = { min: 1800, max: Infinity };
 function setup() {
     //4160 × 3120
-    width = 4160;
-    height = 3120;
+    width = 640;
+    height = 480;
     AREA_THRESHOLD.max = width * height;
     canvas = createCanvas(width, height);
     canvas.id('creata');
@@ -72,13 +72,27 @@ function printContours() {
     }
 }
 
+function getCoordsFromContour(ci) {
+    let res = [];
+    for (let j = 0; j < ci.data32S.length; j += 2) {
+        let p = {};
+        p.x = ci.data32S[j];
+        p.y = ci.data32S[j + 1];
+        res.push(p);
+    }
+    return res;
+}
+
 function loadFromImage() {
+    findContours(cv.imread('ritaglio'));
+}
+function findContours(img) {
 
     background(0);
     contoursArray = [];
 
-    src = cv.imread('ritaglio');
-    original = cv.imread('ritaglio');
+    src = img;
+    original = img;
 
     cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
     cv.threshold(src, src, 120, 200, cv.THRESH_BINARY);
@@ -105,65 +119,29 @@ function loadFromImage() {
             let cy = M.m01 / M.m00
             tmp.delete();
             let color = original.col(cx).row(cy).data;
-            cv.drawContours(dst, poly, j++, color, 1, cv.LINE_8, hierarchy, 0);
+            try{
+
+                cv.drawContours(dst, poly, j++, color, 1, cv.LINE_8, hierarchy, 0);
+            }
+            catch(e){
+                color = new cv.Scalae(127,55,0);
+                cv.drawContours(dst, poly, j++, color, 1, cv.LINE_8, hierarchy, 0);
+            }
         }
     }
     cv.imshow('creata', dst);
     hierarchy.delete();
 
 }
-// function draw(){
-//     snap();
-// }
-function snap() {
-    background(0);
-    contoursArray = [];
-    // pg.image(capture, 0, 0, width, height);
-    // if (!reversed) {
 
-    //     translate(width, 0); // move to far corner
-    //     scale(-1.0, 1.0);    // flip x-axis backwards
-    //     reversed = true;
-    // }
+function snap() {
 
     let cap = new cv.VideoCapture(video);
 
     // take first frame of the video
     let frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
     cap.read(frame);
-
-    src = frame; //cv.imread('ritaglio');
-    //let src = cv.imread(pg.canvas); //decommentare per ripristinare capture da video
-    original = frame; //cv.imread('ritaglio');
-    //let original = cv.imread(pg.canvas); //decommentare per ripristinare capture da video
-    cv.threshold(src, src, 100, 200, cv.THRESH_BINARY);
-    dst = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC3);
-    cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
-    cv.threshold(src, src, 120, 200, cv.THRESH_BINARY);
-
-    // cv.threshold(original, original, 56, 200, cv.THRESH_BINARY);
-    let contours = new cv.MatVector();
-    let hierarchy = new cv.Mat();
-    // You can try more different parameters
-    cv.findContours(src, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-    // draw contours with random Scalar
-    for (let i = 0; i < contours.size(); ++i) {
-        let ci = contours.get(i);
-        let area = cv.contourArea(ci, false);
-        if (area > AREA_THRESHOLD) {
-            contoursArray.push(ci);
-            let M = cv.moments(ci, false);
-            let cx = M.m10 / M.m00
-            let cy = M.m01 / M.m00
-
-            let color = new cv.Scalar(255, 127, 0);
-            // color = original.col(cx).row(cy).data;
-            contoursArray.push(cv.drawContours(dst, contours, i, color, -1, cv.LINE_8, hierarchy, 100));
-        }
-    }
-    cv.imshow('creata', dst);
-    hierarchy.delete();
-
+    findContours(frame);
 }
 
 function showIntersections(path1, path2) {
