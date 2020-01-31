@@ -1,8 +1,9 @@
-const AREA_THRESHOLD = 1800;
+const AREA_THRESHOLD = { min: 1800, max: Infinity };
 function setup() {
     //4160 × 3120
     width = 4160;
     height = 3120;
+    AREA_THRESHOLD.max = width * height;
     canvas = createCanvas(width, height);
     canvas.id('creata');
     // capture = createCapture({
@@ -85,19 +86,26 @@ function loadFromImage() {
 
     let contours = new cv.MatVector();
     let hierarchy = new cv.Mat();
+    let poly = new cv.MatVector();
+
     // You can try more different parameters
     cv.findContours(src, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
+    let j = 0;
     for (let i = 0; i < contours.size(); ++i) {
         let ci = contours.get(i);
         let area = cv.contourArea(ci, false);
-        if (area > AREA_THRESHOLD) {
-            contoursArray.push(ci);
+        if (area < AREA_THRESHOLD.max && area > AREA_THRESHOLD.min) {
+            let tmp = new cv.Mat();
+            // You can try more different parameters
+            cv.approxPolyDP(ci, tmp, 10, true);
+            poly.push_back(tmp);
+            // contoursArray.push(ci);
             let M = cv.moments(ci, false);
             let cx = M.m10 / M.m00
             let cy = M.m01 / M.m00
-
+            tmp.delete();
             let color = original.col(cx).row(cy).data;
-            contoursArray.push(cv.drawContours(dst, contours, i, color, 1, cv.LINE_8, hierarchy, 100));
+            cv.drawContours(dst, poly, j++, color, 1, cv.LINE_8, hierarchy, 0);
         }
     }
     cv.imshow('creata', dst);
