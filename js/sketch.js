@@ -72,7 +72,7 @@ function printContours() {
 // }
 function snap() {
     background(0);
-
+    contoursArray = [];
     // pg.image(capture, 0, 0, width, height);
     // if (!reversed) {
 
@@ -96,7 +96,7 @@ function snap() {
     cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
     cv.threshold(src, src, 120, 200, cv.THRESH_BINARY);
 
-    cv.threshold(original, original, 56, 200, cv.THRESH_BINARY);
+    // cv.threshold(original, original, 56, 200, cv.THRESH_BINARY);
     let contours = new cv.MatVector();
     let hierarchy = new cv.Mat();
     // You can try more different parameters
@@ -105,14 +105,15 @@ function snap() {
     for (let i = 0; i < contours.size(); ++i) {
         let ci = contours.get(i);
         let area = cv.contourArea(ci, false);
-        let M = cv.moments(ci, false);
-        let cx = M.m10 / M.m00
-        let cy = M.m01 / M.m00
         if (area > AREA_THRESHOLD) {
-            let color = new cv.Scalar(Math.round(Math.random() * 255), Math.round(Math.random() * 255),
-                Math.round(Math.random() * 255));
+            contoursArray.push(ci);
+            let M = cv.moments(ci, false);
+            let cx = M.m10 / M.m00
+            let cy = M.m01 / M.m00
+
+            let color = new cv.Scalar(255, 127,0);
             // color = original.col(cx).row(cy).data;
-            cv.drawContours(dst, contours, i, color, -1, cv.LINE_8, hierarchy, 100);
+            contoursArray.push(cv.drawContours(dst, contours, i, color, -1, cv.LINE_8, hierarchy, 100));
         }
     }
     cv.imshow('creata', dst);
