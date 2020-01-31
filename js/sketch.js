@@ -6,6 +6,8 @@ function setup() {
     AREA_THRESHOLD.max = width * height;
     canvas = createCanvas(width, height);
     canvas.id('creata');
+    poly = undefined;
+
     // capture = createCapture({
     //     video: {
     //         mandatory: {
@@ -20,9 +22,7 @@ function setup() {
     // capture.hide();
     // pg = createGraphics(width, height);
     background(0);
-    // paper.setup(document.getElementById('creata'));
     shapes = [];
-    line;
     button = createButton('snap');
     button.position(19, 19);
     button.mousePressed(snap);
@@ -51,16 +51,26 @@ function setup() {
                 console.log("Something went wrong!");
             });
     }
+    paper.setup(document.getElementById('creata'));
+    lineStart = new paper.Point(0, 0);
+    lineEnd = new paper.Point(0, height);
 
-    // snap();
+    pLine = new paper.Path.Line(lineStart, lineEnd);
+
+    pLine.strokeColor = 'black';
 }
 
 function erasePressed() {
     src.delete();
     original.delete();
     contours.delete();
+    poly.delete();
 }
 
+
+function scanPaths() {
+
+}
 function printContours() {
     for (let i = 0; i < contours.size(); ++i) {
         const ci = contours.get(i);
@@ -71,6 +81,7 @@ function printContours() {
         }
     }
 }
+
 
 function getCoordsFromContour(ci) {
     let res = [];
@@ -84,7 +95,33 @@ function getCoordsFromContour(ci) {
 }
 
 function loadFromImage() {
-    findContours(cv.imread('ritaglio'), cv.imread('ritaglio'));
+    poly = new cv.MatVector();
+    let coords = {};
+    findContours(cv.imread('ritaglio'), cv.imread('ritaglio'))
+        .map((c, i) => {
+            coords[i] = getCoordsFromContour(c);
+        });
+    drawPaths(coords);
+
+    // pLine.removeOnMove();
+
+}
+
+function drawPaths(coords) {
+    Object.values(coords).forEach(ps => {
+        let path = new paper.Path();
+        path.strokeColor = 'red';
+        ps.slice(1).forEach(({ x, y }, i) => {
+            path.add(new paper.Point(x, y));
+        });
+        path.closed = true;
+        shapes.push(path);
+    });
+    paper.view.draw();
+
+    // shapes.map(p => {
+    //     showIntersections(pLine, p);
+    // })
 }
 function findContours(src, original) {
 
@@ -92,12 +129,11 @@ function findContours(src, original) {
     contoursArray = [];
 
     cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
-    cv.threshold(src, src, 120, 200, cv.THRESH_BINARY);
+    cv.threshold(src, src, 100, 200, cv.THRESH_BINARY);
     dst = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC4);
 
     let contours = new cv.MatVector();
     let hierarchy = new cv.Mat();
-    let poly = new cv.MatVector();
 
     // You can try more different parameters
     cv.findContours(src, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
@@ -106,50 +142,72 @@ function findContours(src, original) {
         let ci = contours.get(i);
         let area = cv.contourArea(ci, false);
         if (area < AREA_THRESHOLD.max && area > AREA_THRESHOLD.min) {
-            let tmp = new cv.Mat();
             // You can try more different parameters
-            cv.approxPolyDP(ci, tmp, 5, true);
-            poly.push_back(tmp);
-            // contoursArray.push(ci);
+            cv.approxPolyDP(ci, ci, 2, true);
+            poly.push_back(ci);
             let M = cv.moments(ci, false);
             let cx = M.m10 / M.m00
             let cy = M.m01 / M.m00
-            tmp.delete();
             let color = original.col(cx).row(cy).data;
-            try{
-                cv.drawContours(dst, poly, j, color, 1, cv.LINE_8, hierarchy, 0);
+            try {
+                cv.drawContours(dst, poly, j, color, -1, cv.LINE_8, hierarchy, 0);
             }
-            catch(e){
-                color = new cv.Scalar(127,55,0);
+            catch (e) {
+                color = new cv.Scalar(127, 55, 0);
                 cv.drawContours(dst, poly, j, color, 1, cv.LINE_8, hierarchy, 0);
             } finally {
                 j++;
             }
+            ci.color = color;
+            contoursArray.push(ci);
         }
     }
-    cv.imshow('creata', dst);
+    // cv.imshow('creata', dst);
     hierarchy.delete();
-
+    return contoursArray;
 }
 
 function snap() {
 
     let cap = new cv.VideoCapture(video);
-
-    // take first frame of the video
     let frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
     cap.read(frame);
     findContours(frame, frame);
 }
 
-function showIntersections(path1, path2) {
+function drawIntersections(intersections) {
+    for (let i = 0; i < intersections.length; i++) {
+        new paper.Path.Circle({
+            center: intersections[i].point,
+            radius: 5,
+            fillColor: '#009dec'
+        }).removeOnMove();
+    }
+}
+function getIntersections(path1, path2) {
     var intersections = path1.getIntersections(path2);
-    // for (var i = 0; i < intersections.length; i++) {
-    //     new paper.Path.Circle({
-    //         center: intersections[i].point,
-    //         radius: 5,
-    //         fillColor: '#009dec'
-    //     }).removeOnMove();
-    // }
+
     return intersections;
+}
+
+function draw() {
+    if (keyIsDown(LEFT_ARROW)) {
+        pLine.remove();
+        lineStart.x -= 10;
+        lineEnd.x -= 10;
+        drawLine(lineStart, lineEnd)
+    }
+
+    if (keyIsDown(RIGHT_ARROW)) {
+        pLine.remove();
+        lineStart.x += 10;
+        lineEnd.x += 10;
+        drawLine(lineStart, lineEnd)
+    }
+
+}
+
+function drawLine(start, end) {
+    pLine = new paper.Path.Line(start, end);
+    pLine.strokeColor = 'black';
 }
