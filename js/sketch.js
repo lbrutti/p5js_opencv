@@ -1,31 +1,19 @@
 const AREA_THRESHOLD = { min: 100, max: Infinity };
 function setup() {
     //4160 × 3120
-    width = 640;
-    height = 480;
+    intersectionPoints = [];
+    width = 638;
+    height = 478;
     AREA_THRESHOLD.max = width * height;
     canvas = createCanvas(width, height);
     canvas.id('creata');
     poly = undefined;
 
-    // capture = createCapture({
-    //     video: {
-    //         mandatory: {
-    //             minWidth: width,
-    //             minHeight: height
-    //         },
-    //         optional: [{ maxFrameRate: 25 }]
-    //     },
-    //     audio: false
-    // });
-    // capture.size(width, height);
-    // capture.hide();
-    // pg = createGraphics(width, height);
     background(0);
     shapes = [];
-    button = createButton('snap');
+    button = createButton('useWebcam');
     button.position(19, 19);
-    button.mousePressed(snap);
+    button.mousePressed(useWebcam);
 
     testButton = createButton('loadFromImage');
     testButton.position(200, 19);
@@ -102,9 +90,6 @@ function loadFromImage() {
             coords[i] = getCoordsFromContour(c);
         });
     drawPaths(coords);
-
-    // pLine.removeOnMove();
-
 }
 
 function drawPaths(coords) {
@@ -118,10 +103,6 @@ function drawPaths(coords) {
         shapes.push(path);
     });
     paper.view.draw();
-
-    // shapes.map(p => {
-    //     showIntersections(pLine, p);
-    // })
 }
 function findContours(src, original) {
 
@@ -167,43 +148,64 @@ function findContours(src, original) {
     return contoursArray;
 }
 
-function snap() {
-
+function useWebcam() {
+    poly = new cv.MatVector();
+    let coords = {};
     let cap = new cv.VideoCapture(video);
     let frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
     cap.read(frame);
-    findContours(frame, frame);
+    findContours(frame, frame)
+        .map((c, i) => {
+            coords[i] = getCoordsFromContour(c);
+        });
+    drawPaths(coords);
 }
 
-function drawIntersections(intersections) {
+function drawIntersections(intersections, idx) {
+
+    intersectionPoints[idx] && intersectionPoints[idx].map(p => p.remove());
+    intersectionPoints[idx] = [];
     for (let i = 0; i < intersections.length; i++) {
-        new paper.Path.Circle({
+        intersectionPoints[idx].push(new paper.Path.Circle({
             center: intersections[i].point,
             radius: 5,
             fillColor: '#009dec'
-        }).removeOnMove();
+        }));
     }
 }
 function getIntersections(path1, path2) {
-    var intersections = path1.getIntersections(path2);
+    let intersections = path1.getIntersections(path2);
 
     return intersections;
 }
 
 function draw() {
     if (keyIsDown(LEFT_ARROW)) {
-        pLine.remove();
-        lineStart.x -= 10;
-        lineEnd.x -= 10;
-        drawLine(lineStart, lineEnd)
+        if (lineStart.x > 0) {
+            pLine.remove();
+            lineStart.x -= 10;
+            lineEnd.x -= 10;
+            drawLine(lineStart, lineEnd);
+        } else {
+            lineStart.x = 0;
+            lineEnd.x = 0;
+        }
     }
 
     if (keyIsDown(RIGHT_ARROW)) {
-        pLine.remove();
-        lineStart.x += 10;
-        lineEnd.x += 10;
-        drawLine(lineStart, lineEnd)
+        if (lineEnd.x < width) {
+            pLine.remove();
+            lineStart.x += 10;
+            lineEnd.x += 10;
+            drawLine(lineStart, lineEnd);
+        }
     }
+    intArray = [];
+    shapes.map(s => {
+        intArray.push(getIntersections(s, pLine));
+    });
+    intArray.map((i, idx) => drawIntersections(i, idx));
+    // drawIntersections(int);
 
 }
 
