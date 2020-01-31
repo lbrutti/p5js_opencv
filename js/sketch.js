@@ -1,4 +1,4 @@
-const AREA_THRESHOLD = { min: 1800, max: Infinity };
+const AREA_THRESHOLD = { min: 100, max: Infinity };
 function setup() {
     //4160 × 3120
     width = 640;
@@ -84,15 +84,12 @@ function getCoordsFromContour(ci) {
 }
 
 function loadFromImage() {
-    findContours(cv.imread('ritaglio'));
+    findContours(cv.imread('ritaglio'), cv.imread('ritaglio'));
 }
-function findContours(img) {
+function findContours(src, original) {
 
     background(0);
     contoursArray = [];
-
-    src = img;
-    original = img;
 
     cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
     cv.threshold(src, src, 120, 200, cv.THRESH_BINARY);
@@ -111,7 +108,7 @@ function findContours(img) {
         if (area < AREA_THRESHOLD.max && area > AREA_THRESHOLD.min) {
             let tmp = new cv.Mat();
             // You can try more different parameters
-            cv.approxPolyDP(ci, tmp, 10, true);
+            cv.approxPolyDP(ci, tmp, 5, true);
             poly.push_back(tmp);
             // contoursArray.push(ci);
             let M = cv.moments(ci, false);
@@ -120,12 +117,13 @@ function findContours(img) {
             tmp.delete();
             let color = original.col(cx).row(cy).data;
             try{
-
-                cv.drawContours(dst, poly, j++, color, 1, cv.LINE_8, hierarchy, 0);
+                cv.drawContours(dst, poly, j, color, 1, cv.LINE_8, hierarchy, 0);
             }
             catch(e){
-                color = new cv.Scalae(127,55,0);
-                cv.drawContours(dst, poly, j++, color, 1, cv.LINE_8, hierarchy, 0);
+                color = new cv.Scalar(127,55,0);
+                cv.drawContours(dst, poly, j, color, 1, cv.LINE_8, hierarchy, 0);
+            } finally {
+                j++;
             }
         }
     }
@@ -141,7 +139,7 @@ function snap() {
     // take first frame of the video
     let frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
     cap.read(frame);
-    findContours(frame);
+    findContours(frame, frame);
 }
 
 function showIntersections(path1, path2) {
