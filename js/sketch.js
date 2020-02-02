@@ -77,6 +77,7 @@ function getCoordsFromContour(ci) {
         let p = {};
         p.x = ci.data32S[j];
         p.y = ci.data32S[j + 1];
+        p.color = ci.color;
         res.push(p);
     }
     return res;
@@ -95,11 +96,11 @@ function loadFromImage() {
 function drawPaths(coords) {
     Object.values(coords).forEach(ps => {
         let path = new paper.Path();
-        path.strokeColor = 'red';
-        ps.slice(1).forEach(({ x, y }, i) => {
+        ps.slice(1).forEach(({ x, y }) => {
             path.add(new paper.Point(x, y));
         });
         path.closed = true;
+        path.fillColor = new paper.Color(ps[0].color[0]/255, ps[0].color[1]/255, ps[0].color[2]/255) ;
         shapes.push(path);
     });
     paper.view.draw();
@@ -157,6 +158,7 @@ function useWebcam() {
     findContours(frame, frame)
         .map((c, i) => {
             coords[i] = getCoordsFromContour(c);
+            coords[i].color = c.color;
         });
     drawPaths(coords);
 }
@@ -205,8 +207,17 @@ function draw() {
         intArray.push(getIntersections(s, pLine));
     });
     intArray.map((i, idx) => drawIntersections(i, idx));
-    // drawIntersections(int);
+}
 
+
+function onKeyDown(event) {
+	// When a key is pressed, set the content of the text item:
+	console.log('The ' + event.key + ' key was pressed!');
+}
+
+function onKeyUp(event) {
+	// When a key is released, set the content of the text item:
+	console.log( 'The ' + event.key + ' key was released!');
 }
 
 function drawLine(start, end) {
