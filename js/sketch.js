@@ -8,6 +8,7 @@ function setup() {
     AREA_THRESHOLD.max = 207200;// width * height;
     canvas = createCanvas(width, height);
     canvas.id('creata');
+
     poly = undefined;
 
     shapes = [];
@@ -40,6 +41,7 @@ function createButtons() {
     printButton.mousePressed(printContours);
 }
 function initPaper() {
+
     paper.setup(document.getElementById('creata'));
     lineStart = new paper.Point(0, 0);
     lineEnd = new paper.Point(0, height);
@@ -47,6 +49,8 @@ function initPaper() {
     pLine = new paper.Path.Line(lineStart, lineEnd);
 
     pLine.strokeColor = 'black';
+    document.getElementById('creata').width = width;
+    document.getElementById('creata').height = height;
 }
 function setUpVideo() {
     return new Promise((resolve, reject) => {
@@ -213,17 +217,6 @@ function drawIntersections(intersections, idx) {
         shapes[idx].osc.frequency.value = 0;
 
     }
-    //  else {
-
-    //     for (let i = 0; i < intersections.length; i++) {
-    //         intersectionPoints[idx] = intersectionPoints[idx] ? intersectionPoints[idx] : [];
-    //         intersectionPoints[idx].push(new paper.Path.Circle({
-    //             center: intersections[i].point,
-    //             radius: 5,
-    //             fillColor: '#009dec'
-    //         }));
-    //     }
-    // }
 }
 function getIntersections(path1, path2) {
     let intersections = path1.getIntersections(path2);
@@ -233,24 +226,31 @@ function getIntersections(path1, path2) {
 function draw() {
     if (keyIsDown(LEFT_ARROW)) {
         if (lineStart.x > 0) {
-            pLine.remove();
             lineStart.x -= 1;
             lineEnd.x -= 1;
-            drawLine(lineStart, lineEnd);
         } else {
-            lineStart.x = 0;
-            lineEnd.x = 0;
+            lineStart.x = width;
+            lineEnd.x = width;
         }
+        pLine.remove();
+        drawLine(lineStart, lineEnd);
     }
 
     if (keyIsDown(RIGHT_ARROW)) {
         if (lineEnd.x < width) {
-            pLine.remove();
             lineStart.x += 1;
             lineEnd.x += 1;
-            drawLine(lineStart, lineEnd);
         }
+        else {
+            lineStart.x = 0;
+            lineEnd.x = 0;
+
+        }
+        pLine.remove();
+        drawLine(lineStart, lineEnd);
     }
+
+
     intArray = [];
     shapes.map(s => {
         intArray.push(getIntersections(s, pLine));
