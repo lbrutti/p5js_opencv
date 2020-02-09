@@ -1,11 +1,11 @@
-const AREA_THRESHOLD = { min: 100, max: Infinity };
+const AREA_THRESHOLD = { min: 200, max: 700 };
 function setup() {
     background(0);
     //4160 × 3120
     intersectionPoints = [];
-    width = 638;
-    height = 478;
-    AREA_THRESHOLD.max = width * height;
+    width = 640;
+    height = 480;
+    AREA_THRESHOLD.max = 207200;// width * height;
     canvas = createCanvas(width, height);
     canvas.id('creata');
     poly = undefined;
@@ -122,7 +122,7 @@ function drawPaths(coords) {
             path.add(new paper.Point(x, y));
         });
         path.closed = true;
-        path.fillColor = new paper.Color(ps[0].color[0] / 255, ps[0].color[1] / 255, ps[0].color[2] / 255);
+        path.strokeColor = new paper.Color(ps[0].color[0] / 255, ps[0].color[1] / 255, ps[0].color[2] / 255);
         shapes.push(path);
     });
 }
@@ -197,13 +197,19 @@ function drawIntersections(intersections, idx) {
 
     intersectionPoints[idx] && intersectionPoints[idx].map(p => p.remove());
     intersectionPoints[idx] = [];
-    for (let i = 0; i < intersections.length; i++) {
-        intersectionPoints[idx] = intersectionPoints[idx] ? intersectionPoints[idx] : [];
-        intersectionPoints[idx].push(new paper.Path.Circle({
-            center: intersections[i].point,
-            radius: 5,
-            fillColor: '#009dec'
-        }));
+    if(intersections.length == 2){
+        let line =drawLineGen(intersections[0].point, intersections[1].point, idx%2 ? 'red' : 'green');
+        line.strokeWidth = 10;
+        intersectionPoints[idx].push(line);
+    } else {
+        for (let i = 0; i < intersections.length; i++) {
+            intersectionPoints[idx] = intersectionPoints[idx] ? intersectionPoints[idx] : [];
+            intersectionPoints[idx].push(new paper.Path.Circle({
+                center: intersections[i].point,
+                radius: 5,
+                fillColor: '#009dec'
+            }));
+        }
     }
 }
 function getIntersections(path1, path2) {
@@ -239,7 +245,13 @@ function draw() {
     intArray.map((i, idx) => drawIntersections(i, idx));
 }
 
-function drawLine(start, end) {
-    pLine = new paper.Path.Line(start, end);
-    pLine.strokeColor = 'black';
+function drawLine(start, end, color) {
+    pLine = drawLineGen(start,end,color);
+}
+
+function drawLineGen(start, end, color) {
+
+    let line = new paper.Path.Line(start, end);
+    line.strokeColor = color || 'black';
+    return line;
 }
