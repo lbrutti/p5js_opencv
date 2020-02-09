@@ -210,16 +210,20 @@ function drawIntersections(intersections, idx) {
         intersectionPoints[idx].push(line);
         shapes[idx].osc.frequency.value = Math.sqrt(Math.pow(intersections[0].point.y - intersections[1].point.y, 2));
     } else {
+        shapes[idx].osc.frequency.value = 0;
 
-        for (let i = 0; i < intersections.length; i++) {
-            intersectionPoints[idx] = intersectionPoints[idx] ? intersectionPoints[idx] : [];
-            intersectionPoints[idx].push(new paper.Path.Circle({
-                center: intersections[i].point,
-                radius: 5,
-                fillColor: '#009dec'
-            }));
-        }
     }
+    //  else {
+
+    //     for (let i = 0; i < intersections.length; i++) {
+    //         intersectionPoints[idx] = intersectionPoints[idx] ? intersectionPoints[idx] : [];
+    //         intersectionPoints[idx].push(new paper.Path.Circle({
+    //             center: intersections[i].point,
+    //             radius: 5,
+    //             fillColor: '#009dec'
+    //         }));
+    //     }
+    // }
 }
 function getIntersections(path1, path2) {
     let intersections = path1.getIntersections(path2);
@@ -230,8 +234,8 @@ function draw() {
     if (keyIsDown(LEFT_ARROW)) {
         if (lineStart.x > 0) {
             pLine.remove();
-            lineStart.x -= 10;
-            lineEnd.x -= 10;
+            lineStart.x -= 1;
+            lineEnd.x -= 1;
             drawLine(lineStart, lineEnd);
         } else {
             lineStart.x = 0;
@@ -242,8 +246,8 @@ function draw() {
     if (keyIsDown(RIGHT_ARROW)) {
         if (lineEnd.x < width) {
             pLine.remove();
-            lineStart.x += 10;
-            lineEnd.x += 10;
+            lineStart.x += 1;
+            lineEnd.x += 1;
             drawLine(lineStart, lineEnd);
         }
     }
