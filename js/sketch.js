@@ -1,5 +1,6 @@
 const AREA_THRESHOLD = { min: 100, max: Infinity };
 function setup() {
+    background(0);
     //4160 × 3120
     intersectionPoints = [];
     width = 638;
@@ -9,8 +10,19 @@ function setup() {
     canvas.id('creata');
     poly = undefined;
 
-    background(0);
     shapes = [];
+
+    reversed = false;
+    createButtons();
+    setUpVideo()
+        .then(() => {
+            initPaper();
+        })
+        .catch(e => console.error(e));
+}
+
+function createButtons() {
+
     button = createButton('useWebcam');
     button.position(19, 19);
     button.mousePressed(useWebcam);
@@ -26,19 +38,8 @@ function setup() {
     printButton = createButton('printContours');
     printButton.position(120, 19);
     printButton.mousePressed(printContours);
-    reversed = false;
-
-    video = document.querySelector("#videoElement");
-
-    if (navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(function (stream) {
-                video.srcObject = stream;
-            })
-            .catch(function (err0r) {
-                console.log("Something went wrong!");
-            });
-    }
+}
+function initPaper() {
     paper.setup(document.getElementById('creata'));
     lineStart = new paper.Point(0, 0);
     lineEnd = new paper.Point(0, height);
@@ -46,6 +47,23 @@ function setup() {
     pLine = new paper.Path.Line(lineStart, lineEnd);
 
     pLine.strokeColor = 'black';
+}
+function setUpVideo() {
+    return new Promise((resolve, reject) => {
+        video = document.querySelector("#videoElement");
+
+        if (navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function (stream) {
+                    video.srcObject = stream;
+                    resolve();
+                })
+                .catch(function (err0r) {
+                    reject(err0r);
+                    console.log("Something went wrong!");
+                });
+        }
+    });
 }
 
 function erasePressed() {
@@ -90,9 +108,15 @@ function loadFromImage() {
         .map((c, i) => {
             coords[i] = getCoordsFromContour(c);
         });
+    resetShapes();
     drawPaths(coords);
+    paper.view.draw();
 }
 
+function resetShapes() {
+    shapes.map(path => path.remove());
+    shapes = [];
+}
 function drawPaths(coords) {
     Object.values(coords).forEach(ps => {
         let path = new paper.Path();
@@ -100,10 +124,9 @@ function drawPaths(coords) {
             path.add(new paper.Point(x, y));
         });
         path.closed = true;
-        path.fillColor = new paper.Color(ps[0].color[0]/255, ps[0].color[1]/255, ps[0].color[2]/255) ;
+        path.fillColor = new paper.Color(ps[0].color[0] / 255, ps[0].color[1] / 255, ps[0].color[2] / 255);
         shapes.push(path);
     });
-    paper.view.draw();
 }
 function findContours(src, original) {
 
@@ -160,7 +183,9 @@ function useWebcam() {
             coords[i] = getCoordsFromContour(c);
             coords[i].color = c.color;
         });
+    resetShapes();
     drawPaths(coords);
+    paper.view.draw();
 }
 
 function drawIntersections(intersections, idx) {
@@ -207,17 +232,6 @@ function draw() {
         intArray.push(getIntersections(s, pLine));
     });
     intArray.map((i, idx) => drawIntersections(i, idx));
-}
-
-
-function onKeyDown(event) {
-	// When a key is pressed, set the content of the text item:
-	console.log('The ' + event.key + ' key was pressed!');
-}
-
-function onKeyUp(event) {
-	// When a key is released, set the content of the text item:
-	console.log( 'The ' + event.key + ' key was released!');
 }
 
 function drawLine(start, end) {
