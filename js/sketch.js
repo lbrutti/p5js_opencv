@@ -65,14 +65,12 @@ function setUpVideo() {
         }
     });
 }
-
 function erasePressed() {
     src.delete();
     original.delete();
     contours.delete();
     poly.delete();
 }
-
 
 function scanPaths() {
 
@@ -188,11 +186,19 @@ function useWebcam() {
     paper.view.draw();
 }
 
+function resetIntersections() {
+    intersectionPoints.map(intersection => {
+
+        intersection.map(p => p.remove());
+        intersection = [];
+    });
+}
 function drawIntersections(intersections, idx) {
 
     intersectionPoints[idx] && intersectionPoints[idx].map(p => p.remove());
     intersectionPoints[idx] = [];
     for (let i = 0; i < intersections.length; i++) {
+        intersectionPoints[idx] = intersectionPoints[idx] ? intersectionPoints[idx] : [];
         intersectionPoints[idx].push(new paper.Path.Circle({
             center: intersections[i].point,
             radius: 5,
@@ -202,7 +208,6 @@ function drawIntersections(intersections, idx) {
 }
 function getIntersections(path1, path2) {
     let intersections = path1.getIntersections(path2);
-
     return intersections;
 }
 
