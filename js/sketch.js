@@ -112,9 +112,15 @@ function loadFromImage() {
 }
 
 function resetShapes() {
-    shapes.map(path => path.remove());
+    shapes.map(path => {
+        path.remove();
+        path.osc && (path.osc.mute=true);
+        path.osc = null;
+    });
     shapes = [];
 }
+
+
 function drawPaths(coords) {
     Object.values(coords).forEach(ps => {
         let path = new paper.Path();
@@ -123,6 +129,7 @@ function drawPaths(coords) {
         });
         path.closed = true;
         path.strokeColor = new paper.Color(ps[0].color[0] / 255, ps[0].color[1] / 255, ps[0].color[2] / 255);
+        path.osc = new Tone.Oscillator(0, 'sine');
         shapes.push(path);
     });
 }
@@ -197,11 +204,13 @@ function drawIntersections(intersections, idx) {
 
     intersectionPoints[idx] && intersectionPoints[idx].map(p => p.remove());
     intersectionPoints[idx] = [];
-    if(intersections.length == 2){
-        let line =drawLineGen(intersections[0].point, intersections[1].point, idx%2 ? 'red' : 'green');
+    if (intersections.length == 2) {
+        let line = drawLineGen(intersections[0].point, intersections[1].point, idx % 2 ? 'red' : 'green');
         line.strokeWidth = 10;
         intersectionPoints[idx].push(line);
+        shapes[idx].osc.frequency.value = Math.sqrt(Math.pow(intersections[0].point.y - intersections[1].point.y, 2));
     } else {
+
         for (let i = 0; i < intersections.length; i++) {
             intersectionPoints[idx] = intersectionPoints[idx] ? intersectionPoints[idx] : [];
             intersectionPoints[idx].push(new paper.Path.Circle({
@@ -241,12 +250,13 @@ function draw() {
     intArray = [];
     shapes.map(s => {
         intArray.push(getIntersections(s, pLine));
+        s.osc.toDestination().start();
     });
-    intArray.map((i, idx) => drawIntersections(i, idx));
+    intArray.map((i, idx) => { drawIntersections(i, idx) });
 }
 
 function drawLine(start, end, color) {
-    pLine = drawLineGen(start,end,color);
+    pLine = drawLineGen(start, end, color);
 }
 
 function drawLineGen(start, end, color) {
