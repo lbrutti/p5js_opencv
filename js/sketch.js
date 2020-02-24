@@ -252,10 +252,10 @@ function draw() {
 
 
     intArray = [];
-    shapes.map(s => {
-        intArray.push(getIntersections(s, pLine));
-        s.osc.toDestination().start();
-    });
+    for (let i =0; i<shapes.length; i++ ) {
+    intArray.push(getIntersections(shapes[i], pLine));
+    setTimeout(()=>shapes[i].osc.toDestination().start(), 5);
+    }
     intArray.map((i, idx) => { drawIntersections(i, idx) });
 }
 
